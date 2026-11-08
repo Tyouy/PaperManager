@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Paperwise · 论文整理与检索</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+  <script src="/library.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a href="/" class="brand" aria-label="Paperwise 首页"><span class="brand-mark" aria-hidden="true">P<span>·</span></span><span>paperwise<small>论文整理与检索</small></span></a>
+      <span class="local-indicator"><span></span>本地运行</span>
+    </header>
+    <main>
+      <nav class="view-tabs" aria-label="功能导航"><button id="rename-tab" class="view-tab active" type="button" aria-current="page">论文重命名</button><button id="library-tab" class="view-tab" type="button">文献检索</button></nav>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <div id="rename-view">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">LESS FILING. MORE RESEARCH.</p>
+          <h1 id="page-title">让每一篇论文，<br>都有清楚的名字。</h1>
+          <p class="hero-description">选择文件夹，自动识别研究论文、提取信息。<br>核对后，一次完成重命名。</p>
+        </div>
+        <div class="naming-card" aria-label="命名格式示例">
+          <span class="card-caption">你的文件名，从此有迹可循</span>
+          <div class="old-name"><span class="pdf-icon" aria-hidden="true">PDF</span><span>1-s2.0-S009286742300…pdf</span></div>
+          <div class="name-arrow" aria-hidden="true">↓</div>
+          <div class="new-name"><span class="date-example">2025</span><b>-</b><span>Bob Jones</span><b>-</b><span>Cell</span><b>-</b><span>A new perspective…</span><small>.pdf</small></div>
+          <div class="naming-legend"><span><i class="dot date-dot"></i>发表年份</span><span><i class="dot author-dot"></i>末位作者</span><span><i class="dot journal-dot"></i>期刊简称</span><span><i class="dot title-dot"></i>论文标题</span></div>
+          <p class="sample-note">仅为格式示例，实际信息以论文内容为准</p>
+        </div>
+      </section>
+
+      <section class="workspace panel" aria-labelledby="source-title">
+        <div class="section-heading"><span class="step-number">01</span><div><h2 id="source-title">选择论文文件夹</h2><p>扫描 PDF 内容，原有子文件夹结构保持不变。</p></div></div>
+        <form id="scan-form">
+          <label for="folder" class="field-label">文件夹路径</label>
+          <div class="folder-row"><div class="path-field"><span aria-hidden="true">▱</span><input id="folder" name="folder" type="text" placeholder="选择文件夹，或粘贴完整路径" autocomplete="off" spellcheck="false" required></div><button id="pick-folder" class="button button-secondary" type="button">选择文件夹</button><button id="scan-button" class="button button-primary" type="submit"><span aria-hidden="true">⌕</span> 扫描论文</button></div>
+          <div class="scan-options"><label class="check-label"><input id="recursive" type="checkbox" checked><span>包含所有子文件夹</span></label><label class="check-label"><input id="metadata" type="checkbox" checked><span>联网核对标题与期刊</span></label><span class="option-note">开启后会向 Crossref / arXiv 查询 DOI、标题或 arXiv ID</span></div>
+          <details id="ai-settings" class="ai-settings">
+            <summary><span class="ai-symbol" aria-hidden="true">✦</span> AI 辅助识别 <span class="optional-tag">可选</span></summary>
+            <div class="ai-content">
+              <label class="check-label"><input id="ai-enabled" type="checkbox"><span>使用支持 OpenAI 接口格式的模型</span></label>
+              <p class="privacy-note">开启后，论文的部分文本会发送至你配置的服务。API Key 仅用于当前会话，不保存到磁盘。</p>
+              <div class="ai-fields"><label>API 地址<input id="api-base" type="url" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1" spellcheck="false" disabled></label><label>模型名称<input id="ai-model" type="text" placeholder="输入服务支持的模型名称" spellcheck="false" disabled></label><label>API Key（本地服务可留空）<input id="api-key" type="password" placeholder="输入 API Key" autocomplete="off" disabled></label></div>
+            </div>
+          </details>
+        </form>
+      </section>
+
+      <section id="progress-panel" class="progress-panel panel" aria-label="扫描进度" hidden><div class="progress-heading"><span class="spinner" aria-hidden="true"></span><strong id="progress-title">正在扫描文件夹…</strong><span id="progress-count"></span></div><div class="progress-track"><div id="progress-bar"></div></div><p id="progress-file"></p><p class="progress-note">正在读取与核对论文信息，文件名尚未修改。</p></section>
+
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="results-heading"><div class="section-heading"><span class="step-number">02</span><div><h2 id="results-title">核对并重命名</h2><p id="results-description">扫描完成后，识别结果将在这里出现。</p></div></div><button id="export-button" class="button button-quiet" type="button" disabled>↓ 导出结果 CSV</button></div>
+        <div id="empty-state" class="empty-state panel"><div class="empty-illustration" aria-hidden="true"><span></span><span></span><span>PDF</span></div><h3>下一次找论文，从名字开始</h3><p>先选择文件夹并扫描。你可以在修改前逐条核对、编辑识别结果。</p><div class="empty-features"><span>✓ 先预览再修改</span><span>✓ 自动避开重名</span><span>✓ 支持撤销操作</span></div></div>
+        <div id="results-content" hidden>
+          <div class="stats" aria-label="扫描统计"><div><span>扫描文件</span><strong id="stat-total">0</strong></div><div><span><i class="dot ready-dot"></i>可重命名</span><strong id="stat-ready">0</strong></div><div><span><i class="dot review-dot"></i>需要核对</span><strong id="stat-review">0</strong></div><div><span><i class="dot skipped-dot"></i>已跳过 / 失败</span><strong id="stat-skipped">0</strong></div></div>
+          <div class="results-table panel">
+            <div class="table-toolbar"><div class="filters" role="group" aria-label="筛选结果"><button type="button" class="filter active" data-filter="all">全部</button><button type="button" class="filter" data-filter="ready">可重命名</button><button type="button" class="filter" data-filter="review">待核对</button><button type="button" class="filter" data-filter="skipped">已跳过 / 失败</button></div><span id="selection-count">已选 0 项</span></div>
+            <div class="table-scroll"><table><thead><tr><th class="select-column"><input id="select-all" type="checkbox" aria-label="选择所有可重命名的文件"></th><th class="source-column">原文件与识别依据</th><th class="metadata-column">命名信息 <small>可直接编辑</small></th><th class="target-column">新文件名 <small>可直接编辑</small></th></tr></thead><tbody id="results-body"></tbody></table></div>
+            <div id="no-filter-results" class="no-filter-results" hidden>没有符合此筛选条件的文件。</div>
+            <div class="table-footnote"><span aria-hidden="true">ⓘ</span><p>命名顺序：年份-末位作者全名-期刊简称-标题.pdf，仅保留年份。未能识别末位作者时留空并标为待核对；可以稍后补全，也可直接勾选，按「年份-期刊简称-标题.pdf」重命名。arXiv 使用首次提交年份，期刊固定为 arxiv。非论文 PDF 不具备重命名资格。</p></div>
+          </div>
+          <div class="apply-bar"><div><strong id="apply-summary">已选择 0 个文件</strong><p>文件留在原目录；重名时自动添加序号。</p></div><div class="apply-actions"><button id="undo-button" class="button button-secondary" type="button" disabled>撤销上次重命名</button><button id="apply-button" class="button button-primary" type="button" disabled>重命名所选文件</button></div></div>
+        </div>
+      </section>
+      </div>
+      <div id="library-view" hidden>
+        <section class="library-intro"><p class="eyebrow">YOUR PAPERS. WITHIN REACH.</p><h1>整个文献库，<br>按你的思路查找。</h1><p class="hero-description">选择一个大文件夹，索引所有子文件夹中的 PDF。<br>通过发表时间、任一作者和标题，找到需要的文献。</p></section>
+        <section class="panel library-source" aria-labelledby="library-source-title">
+          <div class="section-heading"><span class="step-number">01</span><div><h2 id="library-source-title">选择文献库</h2><p>识别期刊论文、arXiv 和其他预印本；索引完成后核对全文并检查重复副本。</p></div></div>
+          <form id="library-index-form">
+            <label for="library-folder" class="field-label">大文件夹路径（包含所有子文件夹）</label>
+            <div class="folder-row"><div class="path-field"><span aria-hidden="true">▱</span><input id="library-folder" type="text" placeholder="选择包含全部文献的大文件夹" autocomplete="off" spellcheck="false" required></div><button id="library-pick" class="button button-secondary" type="button">选择文件夹</button><button id="library-index" class="button button-primary" type="submit">建立 / 更新索引</button></div>
+            <div class="scan-options"><label class="check-label"><input id="library-metadata" type="checkbox"><span>联网补全题录与发表时间</span></label><span class="library-option-note">默认本地识别；联网时向 Crossref / arXiv 查询 DOI、标题或编号。</span></div>
+            <div class="scan-options"><label class="check-label"><input id="library-deduplicate" type="checkbox" checked><span>核对后移除确定重复的副本（可恢复）</span></label><span class="library-option-note">核对全部页面文本、图表与批注；内容不同的预印本、修订版和发表版保留。取消勾选则只生成核对报告。</span></div>
+          </form>
+          <p id="library-index-info" class="library-index-info" aria-live="polite">选择文件夹后可读取已保存的索引。</p>
+        </section>
+        <div id="library-notice" class="notice" role="status" aria-live="polite" hidden></div>
+        <section id="library-progress" class="panel progress-panel" aria-label="文献库索引进度" hidden><div class="progress-heading"><span class="spinner" aria-hidden="true"></span><strong id="library-progress-title">正在查找文献…</strong><span id="library-progress-count"></span></div><progress id="library-progress-bar" max="100" value="0"></progress><p id="library-progress-file"></p><p class="progress-note">题录保存在本地；确定重复的副本移至所选文件夹内的 .paper-duplicates，可恢复。</p></section>
+        <section id="library-duplicates" class="panel library-duplicates" aria-labelledby="library-duplicates-title" hidden>
+          <div class="results-heading"><div><h2 id="library-duplicates-title">全文去重核对</h2><p id="library-duplicates-summary" aria-live="polite"></p></div><button id="library-restore-duplicates" class="button button-secondary" type="button" disabled>恢复上次移除的副本</button></div>
+          <details><summary>查看保留文件、重复副本和核对依据</summary><div id="library-duplicates-details"></div></details>
+        </section>
+        <section class="results-section" aria-labelledby="library-search-title">
+          <div class="section-heading"><span class="step-number">02</span><div><h2 id="library-search-title">检索文献</h2><p>条件可单独使用或组合；不区分大小写。时间只需输入四位年份。</p></div></div>
+          <form id="library-search-form" class="panel library-search">
+            <div class="library-search-fields"><label>开始年份<input id="library-date-from" type="text" placeholder="例如 2020" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" spellcheck="false"></label><label>结束年份<input id="library-date-to" type="text" placeholder="例如 2025" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" spellcheck="false"></label><label>作者<input id="library-author" type="search" placeholder="任一作者的姓名或关键词"></label><label>标题<input id="library-title" type="search" placeholder="论文标题关键词"></label></div>
+            <div class="library-search-actions"><label for="library-sort">排序 <select id="library-sort"><option value="date_desc">发表时间：从新到旧</option><option value="date_asc">发表时间：从旧到新</option><option value="author">作者姓名</option><option value="title">论文标题</option></select></label><div><button id="library-reset" class="button button-secondary" type="button">清空条件</button><button id="library-search-button" class="button button-primary" type="submit">检索文献</button></div></div>
+            <p class="library-search-note">发表时间仅显示年份；未识别年份的文献排在时间排序末尾，设置年份范围时不包含这些文献。</p>
+          </form>
+          <div class="panel library-results"><div class="table-toolbar"><strong id="library-count" aria-live="polite">尚未载入文献库</strong><span>发表时间 · 作者 · 标题</span></div><div id="library-empty" class="no-filter-results">选择文件夹并建立索引，即可检索文献。</div><div class="table-scroll"><table id="library-table" hidden><caption class="sr-only">文献检索结果</caption><thead><tr><th class="library-date-column" scope="col">发表时间</th><th class="library-author-column" scope="col">作者</th><th scope="col">论文标题 / 文件位置</th><th class="library-open-column" scope="col">操作</th></tr></thead><tbody id="library-results-body"></tbody></table></div><div class="library-pagination"><button id="library-prev" class="button button-secondary" type="button" disabled>上一页</button><span id="library-page">第 1 / 1 页</span><button id="library-next" class="button button-secondary" type="button" disabled>下一页</button></div></div>
+        </section>
+      </div>
+      <footer class="site-footer"><span>paperwise <b>·</b> 为有序的研究而作</span><span>本地解析 · 可选联网核对 · 不修改 PDF 内容</span></footer>
+    </main>
+  </div>
+</body>
+</html>

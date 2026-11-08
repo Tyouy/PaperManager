@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+.paper-renamer-history/
+tmp/
+.paper-library.sqlite3*
+.paper-duplicates/
+.paperwise-desktop.*
+.paperwise-desktop.log
+文献检索.app/
+.env
+.env.*
